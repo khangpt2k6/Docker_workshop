@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Docker Workshop Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ffc0e0 0%, #e6c5ff 50%, #c8a5ff 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            color: #4a148c;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #6a1b9a;
+            font-weight: 300;
+        }
+
+        .docker-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(106, 27, 154, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(106, 27, 154, 0.3);
+        }
+
+        .card h2 {
+            color: #6a1b9a;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            font-size: 1.8em;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #ffe6f2 0%, #f3e6ff 100%);
+            border-radius: 10px;
+            border-left: 4px solid #ab47bc;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #4a148c;
+        }
+
+        .info-value {
+            color: #6a1b9a;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stats-bar {
+            width: 100%;
+            height: 25px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .stats-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff69b4, #ba68c8);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #ff69b4, #ba68c8);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            box-shadow: 0 5px 15px rgba(186, 104, 200, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(186, 104, 200, 0.6);
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.98);
+        }
+
+        .loading {
+            text-align: center;
+            color: #6a1b9a;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 105, 180, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #ff69b4;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        .visit-counter {
+            background: linear-gradient(135deg, #ff69b4, #ba68c8);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(186, 104, 200, 0.4);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #6a1b9a;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="docker-icon">🐋</div>
+            <h1>Docker Workshop Demo</h1>
+            <p class="subtitle">Real-time Container Information Dashboard</p>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading container information...</p>
+        </div>
+
+        <div id="content">
+            <div class="cards-grid">
+                <div class="card">
+                    <h2><span class="card-icon">🖥️</span> Container Info</h2>
+                    <div class="info-item">
+                        <span class="info-label">Hostname:</span>
+                        <span class="info-value" id="hostname">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">IP Address:</span>
+                        <span class="info-value" id="ip">-</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><span class="card-icon">📊</span> System Resources</h2>
+                    <div class="info-item" style="flex-direction: column; gap: 5px;">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <span class="info-label">CPU Usage:</span>
+                            <span class="info-value" id="cpu">-</span>
+                        </div>
+                        <div class="stats-bar">
+                            <div class="stats-fill" id="cpu-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="info-item" style="flex-direction: column; gap: 5px;">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <span class="info-label">Memory Usage:</span>
+                            <span class="info-value" id="memory">-</span>
+                        </div>
+                        <div class="stats-bar">
+                            <div class="stats-fill" id="memory-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Available Memory:</span>
+                        <span class="info-value" id="memory-available">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Disk Usage:</span>
+                        <span class="info-value" id="disk">-</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><span class="card-icon">🌍</span> Environment</h2>
+                    <div class="info-item">
+                        <span class="info-label">Environment:</span>
+                        <span class="info-value" id="env">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">App Version:</span>
+                        <span class="info-value" id="version">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Custom Message:</span>
+                        <span class="info-value" id="message">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visit-counter">
+                🎯 Total Visits: <span id="visits">0</span>
+            </div>
+
+            <button class="refresh-btn" onclick="loadInfo()">🔄 Refresh Data</button>
+
+            <p class="timestamp">Last updated: <span id="timestamp">-</span></p>
+        </div>
+    </div>
+
+    <script>
+        async function loadInfo() {
+            const loadingEl = document.getElementById('loading');
+            const contentEl = document.getElementById('content');
+            
+            try {
+                loadingEl.style.display = 'block';
+                
+                const response = await fetch('/api/info');
+                const data = await response.json();
+
+                if (data.success) {
+                    // Container info
+                    document.getElementById('hostname').textContent = data.container.hostname;
+                    document.getElementById('ip').textContent = data.container.ip_address;
+
+                    // Stats
+                    document.getElementById('cpu').textContent = data.stats.cpu_usage;
+                    document.getElementById('memory').textContent = data.stats.memory_usage;
+                    document.getElementById('memory-available').textContent = data.stats.memory_available;
+                    document.getElementById('disk').textContent = data.stats.disk_usage;
+
+                    // Update progress bars
+                    const cpuPercent = parseFloat(data.stats.cpu_usage);
+                    const memoryPercent = parseFloat(data.stats.memory_usage);
+                    
+                    document.getElementById('cpu-bar').style.width = cpuPercent + '%';
+                    document.getElementById('cpu-bar').textContent = data.stats.cpu_usage;
+                    
+                    document.getElementById('memory-bar').style.width = memoryPercent + '%';
+                    document.getElementById('memory-bar').textContent = data.stats.memory_usage;
+
+                    // Environment
+                    document.getElementById('env').textContent = data.environment.ENVIRONMENT;
+                    document.getElementById('version').textContent = data.environment.APP_VERSION;
+                    document.getElementById('message').textContent = data.environment.CUSTOM_MESSAGE;
+
+                    // Visits and timestamp
+                    document.getElementById('visits').textContent = data.visits;
+                    document.getElementById('timestamp').textContent = new Date(data.timestamp).toLocaleString();
+                }
+            } catch (error) {
+                console.error('Error loading info:', error);
+                alert('Failed to load container information. Please try again.');
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Load info on page load
+        window.addEventListener('load', loadInfo);
+
+        // Auto-refresh every 5 seconds
+        setInterval(loadInfo, 5000);
+    </script>
+</body>
+</html>
+

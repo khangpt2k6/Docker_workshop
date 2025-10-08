@@ -1,101 +1,66 @@
-from flask import Flask, request, jsonify
-from datetime import datetime
+from flask import Flask, render_template, jsonify
 import os
+import socket
+import datetime
+import psutil
+from collections import Counter
 
 app = Flask(__name__)
 
-# In-memory storage for tasks
-tasks = {}
-task_counter = 1
+# Visit counter
+visit_count = Counter()
 
 @app.route('/')
 def home():
-    return jsonify({
-        'message': 'Welcome to Personal To-Do List API',
-        'endpoints': {
-            'GET /tasks': 'List all tasks',
-            'GET /tasks/<id>': 'Get a specific task',
-            'POST /tasks': 'Create a new task',
-            'PUT /tasks/<id>': 'Update a task',
-            'DELETE /tasks/<id>': 'Delete a task'
+    visit_count['total'] += 1
+    return render_template('index.html')
+
+@app.route('/api/info')
+def get_info():
+    """API endpoint to get container and system information"""
+    try:
+        # Get container/host information
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        
+        # Get system resources
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        # Get environment variables
+        env_vars = {
+            'ENVIRONMENT': os.getenv('ENVIRONMENT', 'development'),
+            'APP_VERSION': os.getenv('APP_VERSION', '1.0.0'),
+            'CUSTOM_MESSAGE': os.getenv('CUSTOM_MESSAGE', 'Welcome to Docker Workshop!'),
         }
-    })
+        
+        return jsonify({
+            'success': True,
+            'container': {
+                'hostname': hostname,
+                'ip_address': ip_address,
+            },
+            'stats': {
+                'cpu_usage': f"{cpu_percent}%",
+                'memory_usage': f"{memory.percent}%",
+                'memory_available': f"{memory.available / (1024**3):.2f} GB",
+                'disk_usage': f"{disk.percent}%",
+            },
+            'environment': env_vars,
+            'visits': visit_count['total'],
+            'timestamp': datetime.datetime.now().isoformat(),
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/tasks', methods=['GET'])
-def get_tasks():
-    """Get all tasks"""
-    return jsonify({
-        'success': True,
-        'count': len(tasks),
-        'tasks': list(tasks.values())
-    })
-
-@app.route('/tasks/<int:task_id>', methods=['GET'])
-def get_task(task_id):
-    """Get a specific task by ID"""
-    task = tasks.get(task_id)
-    if task:
-        return jsonify({'success': True, 'task': task})
-    return jsonify({'success': False, 'error': 'Task not found'}), 404
-
-@app.route('/tasks', methods=['POST'])
-def create_task():
-    """Create a new task"""
-    global task_counter
-    
-    data = request.get_json()
-    if not data or 'title' not in data:
-        return jsonify({'success': False, 'error': 'Title is required'}), 400
-    
-    task = {
-        'id': task_counter,
-        'title': data['title'],
-        'description': data.get('description', ''),
-        'completed': False,
-        'created_at': datetime.now().isoformat(),
-        'updated_at': datetime.now().isoformat()
-    }
-    
-    tasks[task_counter] = task
-    task_counter += 1
-    
-    return jsonify({'success': True, 'task': task}), 201
-
-@app.route('/tasks/<int:task_id>', methods=['PUT'])
-def update_task(task_id):
-    """Update an existing task"""
-    task = tasks.get(task_id)
-    if not task:
-        return jsonify({'success': False, 'error': 'Task not found'}), 404
-    
-    data = request.get_json()
-    if not data:
-        return jsonify({'success': False, 'error': 'No data provided'}), 400
-    
-    if 'title' in data:
-        task['title'] = data['title']
-    if 'description' in data:
-        task['description'] = data['description']
-    if 'completed' in data:
-        task['completed'] = data['completed']
-    
-    task['updated_at'] = datetime.now().isoformat()
-    
-    return jsonify({'success': True, 'task': task})
-
-@app.route('/tasks/<int:task_id>', methods=['DELETE'])
-def delete_task(task_id):
-    """Delete a task"""
-    task = tasks.pop(task_id, None)
-    if task:
-        return jsonify({'success': True, 'message': 'Task deleted', 'task': task})
-    return jsonify({'success': False, 'error': 'Task not found'}), 404
-
-@app.route('/health', methods=['GET'])
+@app.route('/health')
 def health():
-    """Health check endpoint"""
-    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+    """Health check endpoint for Docker"""
+    return jsonify({'status': 'healthy', 'timestamp': datetime.datetime.now().isoformat()})
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    print(f"Starting Docker Workshop Demo App...")
+    print(f"🌐 Server running on http://0.0.0.0:5000")
+    app.run(host='0.0.0.0', port=5000, debug=False)
+    
