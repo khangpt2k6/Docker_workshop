@@ -54,10 +54,6 @@ def get_info():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/health')
-def health():
-    """Health check endpoint for Docker"""
-    return jsonify({'status': 'healthy', 'timestamp': datetime.datetime.now().isoformat()})
 
 if __name__ == '__main__':
     print(f"Starting Docker Workshop Demo App...")

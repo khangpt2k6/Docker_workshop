@@ -9,7 +9,7 @@ services:
     environment:
       - ENVIRONMENT=production
       - APP_VERSION=2.0.0
-      - CUSTOM_MESSAGE=Welcome to Docker Workshop! 🚀
+      - CUSTOM_MESSAGE=Welcome to Docker Workshop!
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
